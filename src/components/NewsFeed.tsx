@@ -1,7 +1,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import ArticleCard, { Article } from "./ArticleCard";
-import { Loader } from "lucide-react";
+import { Loader, AlertCircle } from "lucide-react";
 
 // Mock data
 const articles: Article[] = [
@@ -66,9 +66,11 @@ const generateMoreArticles = (start: number, count: number): Article[] => {
   const result: Article[] = [];
   for (let i = start; i < start + count; i++) {
     const index = i % articles.length;
+    // Use a unique ID by combining the index and a timestamp to avoid key conflicts
+    const uniqueId = `${i}-${Date.now()}`;
     result.push({
       ...articles[index],
-      id: `${i}`,
+      id: uniqueId,
       title: `${articles[index].title} ${Math.floor(i / articles.length) + 1}`,
       date: new Date(new Date(articles[index].date).getTime() - i * 86400000).toLocaleDateString('en-US', {
         year: 'numeric',
@@ -85,29 +87,50 @@ interface NewsFeedProps {
 }
 
 export default function NewsFeed({ category }: NewsFeedProps) {
-  const [displayedArticles, setDisplayedArticles] = useState<Article[]>(articles);
-  const [isLoading, setIsLoading] = useState(false);
+  const [displayedArticles, setDisplayedArticles] = useState<Article[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const loaderRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // If category is provided, filter articles
-    if (category) {
-      setDisplayedArticles(articles.filter(article => 
-        article.category.toLowerCase() === category.toLowerCase()
-      ));
-      setPage(1);
-    } else {
-      setDisplayedArticles(articles);
-      setPage(1);
-    }
+    // Reset state when category changes
+    setError(null);
+    setIsLoading(true);
+    setDisplayedArticles([]);
+    
+    // Simulate API call with timeout
+    const timer = setTimeout(() => {
+      try {
+        if (category) {
+          const filtered = articles.filter(article => 
+            article.category.toLowerCase() === category.toLowerCase()
+          );
+          
+          if (filtered.length === 0) {
+            setDisplayedArticles([]);
+          } else {
+            setDisplayedArticles(filtered);
+          }
+        } else {
+          setDisplayedArticles(articles);
+        }
+        setPage(1);
+        setIsLoading(false);
+      } catch (err) {
+        setError("Failed to load articles. Please try again later.");
+        setIsLoading(false);
+      }
+    }, 1000);
+    
+    return () => clearTimeout(timer);
   }, [category]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
       entries => {
         const entry = entries[0];
-        if (entry.isIntersecting && !isLoading) {
+        if (entry.isIntersecting && !isLoading && !error) {
           loadMoreArticles();
         }
       },
@@ -119,44 +142,92 @@ export default function NewsFeed({ category }: NewsFeedProps) {
     }
     
     return () => observer.disconnect();
-  }, [isLoading, category]);
+  }, [isLoading, category, error]);
   
   const loadMoreArticles = () => {
     setIsLoading(true);
     
     // Simulate API call
     setTimeout(() => {
-      const newArticles = generateMoreArticles(displayedArticles.length, 6);
-      
-      if (category) {
-        const filtered = newArticles.filter(
-          article => article.category.toLowerCase() === category.toLowerCase()
-        );
-        setDisplayedArticles(prev => [...prev, ...filtered]);
-      } else {
-        setDisplayedArticles(prev => [...prev, ...newArticles]);
+      try {
+        const newArticles = generateMoreArticles(displayedArticles.length, 6);
+        
+        if (category) {
+          const filtered = newArticles.filter(
+            article => article.category.toLowerCase() === category.toLowerCase()
+          );
+          setDisplayedArticles(prev => [...prev, ...filtered]);
+        } else {
+          setDisplayedArticles(prev => [...prev, ...newArticles]);
+        }
+        
+        setPage(prev => prev + 1);
+        setIsLoading(false);
+      } catch (err) {
+        setError("Failed to load more articles. Please try again later.");
+        setIsLoading(false);
       }
-      
-      setPage(prev => prev + 1);
-      setIsLoading(false);
     }, 1000);
   };
+  
+  if (error && displayedArticles.length === 0) {
+    return (
+      <div className="mb-12">
+        <h2 className="text-2xl font-display font-bold mb-6">Latest Articles</h2>
+        <div className="neumorph p-8 text-center">
+          <AlertCircle className="mx-auto mb-4 text-red-500" size={32} />
+          <p className="text-lg text-muted-foreground">{error}</p>
+          <button 
+            className="mt-4 btn-neumorph px-4 py-2 text-primary"
+            onClick={() => {
+              setError(null);
+              setIsLoading(true);
+              // Re-attempt loading
+              setTimeout(() => {
+                if (category) {
+                  setDisplayedArticles(articles.filter(
+                    article => article.category.toLowerCase() === category.toLowerCase()
+                  ));
+                } else {
+                  setDisplayedArticles(articles);
+                }
+                setIsLoading(false);
+              }, 1000);
+            }}
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
   
   return (
     <div className="mb-12">
       <h2 className="text-2xl font-display font-bold mb-6">Latest Articles</h2>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {displayedArticles.map(article => (
-          <ArticleCard key={article.id} article={article} />
-        ))}
-      </div>
+      {isLoading && displayedArticles.length === 0 ? (
+        <div className="neumorph p-12 flex justify-center items-center">
+          <Loader size={32} className="animate-spin text-primary" />
+          <p className="ml-4 text-lg text-muted-foreground">Loading articles...</p>
+        </div>
+      ) : displayedArticles.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {displayedArticles.map(article => (
+            <ArticleCard key={article.id} article={article} />
+          ))}
+        </div>
+      ) : (
+        <div className="neumorph p-8 text-center">
+          <p className="text-lg text-muted-foreground">No articles found for this category.</p>
+        </div>
+      )}
       
       <div 
         ref={loaderRef} 
         className="py-8 flex justify-center items-center"
       >
-        {isLoading && (
+        {isLoading && displayedArticles.length > 0 && (
           <div className="flex flex-col items-center space-y-2">
             <Loader size={24} className="animate-spin text-primary" />
             <p className="text-sm text-muted-foreground">Loading more articles...</p>

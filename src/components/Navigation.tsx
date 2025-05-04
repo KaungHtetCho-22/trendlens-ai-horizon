@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { ThemeToggle } from "./ThemeToggle";
 import { Menu, Search, X, LogIn } from "lucide-react";
 import SearchBar from "./SearchBar";
@@ -21,6 +21,7 @@ export default function Navigation() {
   const [isOpen, setIsOpen] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
   
   const toggleMenu = () => setIsOpen(!isOpen);
   const toggleSearch = () => setShowSearch(!showSearch);
@@ -29,6 +30,9 @@ export default function Navigation() {
     const authSection = document.getElementById("auth-section");
     if (authSection) {
       authSection.scrollIntoView({ behavior: "smooth" });
+    } else {
+      // If we're not on the home page, navigate to it first
+      navigate('/#auth-section');
     }
   };
   
@@ -85,10 +89,10 @@ export default function Navigation() {
           </div>
         </div>
         
-        {/* Mobile Navigation */}
+        {/* Mobile Navigation - Improved with better glassmorphism */}
         {isOpen && (
-          <div className="md:hidden glass absolute left-0 right-0 top-full p-4 animate-fade-in backdrop-blur-md bg-white/70 dark:bg-zinc-800/60 border-t border-white/20 dark:border-white/10 shadow-sm">
-            <div className="flex flex-col space-y-4">
+          <div className="md:hidden fixed inset-x-0 top-[57px] p-4 z-50 animate-fade-in backdrop-blur-md bg-white/80 dark:bg-zinc-800/80 border-t border-white/20 dark:border-white/10 shadow-md">
+            <div className="flex flex-col space-y-4 max-h-[80vh] overflow-y-auto">
               {categories.map(category => (
                 <NavLink
                   key={category.path}
@@ -122,7 +126,7 @@ export default function Navigation() {
         
         {/* Search Overlay */}
         {showSearch && (
-          <div className="fixed inset-0 glass z-50 flex items-start justify-center p-6 animate-fade-in">
+          <div className="fixed inset-0 glass z-50 flex items-start justify-center p-6 animate-fade-in backdrop-blur-md bg-white/80 dark:bg-zinc-800/80">
             <div className="w-full max-w-2xl">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-xl font-bold">Search</h2>

@@ -1,9 +1,12 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ArticleCard, { Article } from "../components/ArticleCard";
 import PodcastCard, { Podcast } from "../components/PodcastCard";
 import PodcastPlayer from "../components/PodcastPlayer";
+import { LogIn } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 // Mock saved data
 const savedArticles: Article[] = [
@@ -42,6 +45,15 @@ const savedPodcasts: Podcast[] = [
 
 const SavedPage = () => {
   const [currentPodcast, setCurrentPodcast] = useState<Podcast | null>(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const navigate = useNavigate();
+  
+  // Mock authentication check (in a real app, this would use a proper auth hook)
+  useEffect(() => {
+    // For demo purposes, we'll simulate a user not being logged in
+    // In a real app, this would check the auth state from context or a hook
+    setIsLoggedIn(false);
+  }, []);
   
   const handlePlayPodcast = (podcast: Podcast) => {
     setCurrentPodcast(podcast);
@@ -50,6 +62,37 @@ const SavedPage = () => {
   const handleClosePodcast = () => {
     setCurrentPodcast(null);
   };
+  
+  const scrollToAuth = () => {
+    const authSection = document.getElementById("auth-section");
+    if (authSection) {
+      authSection.scrollIntoView({ behavior: "smooth" });
+    } else {
+      // If we're not on the home page, navigate to it first
+      navigate('/#auth-section');
+    }
+  };
+  
+  if (!isLoggedIn) {
+    return (
+      <div className="container mx-auto px-4 py-12">
+        <div className="neumorph p-12 text-center max-w-2xl mx-auto">
+          <h1 className="text-2xl md:text-3xl font-display font-bold mb-5">Login Required</h1>
+          <p className="text-lg text-muted-foreground mb-6">
+            Please log in to view your saved content.
+          </p>
+          <Button 
+            size="lg"
+            className="btn-neumorph flex items-center justify-center"
+            onClick={scrollToAuth}
+          >
+            <LogIn size={18} className="mr-2" />
+            Login to Continue
+          </Button>
+        </div>
+      </div>
+    );
+  }
   
   return (
     <div className="container mx-auto px-4 py-6">
