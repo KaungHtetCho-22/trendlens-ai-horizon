@@ -2,9 +2,10 @@
 import { useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { ThemeToggle } from "./ThemeToggle";
-import { Menu, Search, X } from "lucide-react";
+import { Menu, Search, X, LogIn } from "lucide-react";
 import SearchBar from "./SearchBar";
 import Logo from "./Logo";
+import { Button } from "./ui/button";
 
 const categories = [
   { name: "Home", path: "/" },
@@ -23,6 +24,13 @@ export default function Navigation() {
   
   const toggleMenu = () => setIsOpen(!isOpen);
   const toggleSearch = () => setShowSearch(!showSearch);
+  
+  const scrollToAuth = () => {
+    const authSection = document.getElementById("auth-section");
+    if (authSection) {
+      authSection.scrollIntoView({ behavior: "smooth" });
+    }
+  };
   
   return (
     <nav className="sticky top-0 z-50 glass px-4 py-3">
@@ -57,6 +65,15 @@ export default function Navigation() {
           </div>
           
           <div className="flex items-center space-x-4">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="hidden md:flex items-center"
+              onClick={scrollToAuth}
+            >
+              <LogIn size={16} className="mr-2" />
+              Login
+            </Button>
             <button
               className="btn-neumorph flex items-center justify-center w-10 h-10"
               onClick={toggleSearch}
@@ -88,6 +105,17 @@ export default function Navigation() {
                   {category.name}
                 </NavLink>
               ))}
+              <Button 
+                variant="outline" 
+                className="w-full mt-2 flex items-center justify-center"
+                onClick={() => {
+                  setIsOpen(false);
+                  scrollToAuth();
+                }}
+              >
+                <LogIn size={16} className="mr-2" />
+                Login / Register
+              </Button>
             </div>
           </div>
         )}
