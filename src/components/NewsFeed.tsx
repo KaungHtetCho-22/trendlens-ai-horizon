@@ -84,9 +84,15 @@ const generateMoreArticles = (start: number, count: number): Article[] => {
 
 interface NewsFeedProps {
   category?: string;
+  dateRange?: string;
+  sortBy?: string;
 }
 
-export default function NewsFeed({ category }: NewsFeedProps) {
+export default function NewsFeed({ 
+  category,
+  dateRange = "this-week",
+  sortBy = "newest"
+}: NewsFeedProps) {
   const [displayedArticles, setDisplayedArticles] = useState<Article[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -94,7 +100,7 @@ export default function NewsFeed({ category }: NewsFeedProps) {
   const loaderRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Reset state when category changes
+    // Reset state when category or filters change
     setError(null);
     setIsLoading(true);
     setDisplayedArticles([]);
@@ -102,19 +108,52 @@ export default function NewsFeed({ category }: NewsFeedProps) {
     // Simulate API call with timeout
     const timer = setTimeout(() => {
       try {
+        let filtered = [...articles];
+        
         if (category) {
-          const filtered = articles.filter(article => 
+          filtered = filtered.filter(article => 
             article.category.toLowerCase() === category.toLowerCase()
           );
-          
-          if (filtered.length === 0) {
-            setDisplayedArticles([]);
-          } else {
-            setDisplayedArticles(filtered);
-          }
-        } else {
-          setDisplayedArticles(articles);
         }
+        
+        // Apply sorting based on sortBy parameter
+        if (sortBy === "oldest") {
+          filtered.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+        } else if (sortBy === "newest") {
+          filtered.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        } else if (sortBy === "most-viewed") {
+          // For this mock, we'll just randomize to simulate view count sorting
+          filtered.sort(() => Math.random() - 0.5);
+        }
+        
+        // Apply date filtering based on dateRange parameter
+        if (dateRange !== "all") {
+          const now = new Date();
+          let startDate: Date;
+          
+          switch (dateRange) {
+            case "this-week":
+              startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7);
+              break;
+            case "this-month":
+              startDate = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
+              break;
+            case "this-year":
+              startDate = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate());
+              break;
+            default:
+              startDate = new Date(0); // Beginning of time
+          }
+          
+          filtered = filtered.filter(article => new Date(article.date) >= startDate);
+        }
+        
+        if (filtered.length === 0) {
+          setDisplayedArticles([]);
+        } else {
+          setDisplayedArticles(filtered);
+        }
+        
         setPage(1);
         setIsLoading(false);
       } catch (err) {
@@ -124,7 +163,7 @@ export default function NewsFeed({ category }: NewsFeedProps) {
     }, 1000);
     
     return () => clearTimeout(timer);
-  }, [category]);
+  }, [category, dateRange, sortBy]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -142,7 +181,7 @@ export default function NewsFeed({ category }: NewsFeedProps) {
     }
     
     return () => observer.disconnect();
-  }, [isLoading, category, error]);
+  }, [isLoading, category, error, dateRange, sortBy]);
   
   const loadMoreArticles = () => {
     setIsLoading(true);
@@ -150,17 +189,25 @@ export default function NewsFeed({ category }: NewsFeedProps) {
     // Simulate API call
     setTimeout(() => {
       try {
-        const newArticles = generateMoreArticles(displayedArticles.length, 6);
+        let newArticles = generateMoreArticles(displayedArticles.length, 6);
         
         if (category) {
-          const filtered = newArticles.filter(
+          newArticles = newArticles.filter(
             article => article.category.toLowerCase() === category.toLowerCase()
           );
-          setDisplayedArticles(prev => [...prev, ...filtered]);
-        } else {
-          setDisplayedArticles(prev => [...prev, ...newArticles]);
         }
         
+        // Apply sorting based on sortBy parameter
+        if (sortBy === "oldest") {
+          newArticles.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+        } else if (sortBy === "newest") {
+          newArticles.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        } else if (sortBy === "most-viewed") {
+          // For this mock, we'll just randomize to simulate view count sorting
+          newArticles.sort(() => Math.random() - 0.5);
+        }
+        
+        setDisplayedArticles(prev => [...prev, ...newArticles]);
         setPage(prev => prev + 1);
         setIsLoading(false);
       } catch (err) {
@@ -212,7 +259,7 @@ export default function NewsFeed({ category }: NewsFeedProps) {
           <p className="ml-4 text-lg text-muted-foreground">Loading articles...</p>
         </div>
       ) : displayedArticles.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6">
           {displayedArticles.map(article => (
             <ArticleCard key={article.id} article={article} />
           ))}

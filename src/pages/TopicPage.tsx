@@ -1,8 +1,8 @@
 
 import { useEffect, useState } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import NewsFeed from "../components/NewsFeed";
-import TrendingTags from "../components/TrendingTags";
+import FilterPanel from "../components/FilterPanel";
 
 const topicMap: Record<string, { title: string, description: string }> = {
   ml: {
@@ -32,7 +32,10 @@ const topics = Object.entries(topicMap).map(([key, value]) => ({
 const TopicPage = () => {
   const { topic } = useParams<{ topic: string }>();
   const [topicInfo, setTopicInfo] = useState<{ title: string, description: string } | null>(null);
-  const navigate = useNavigate();
+  const [filters, setFilters] = useState({
+    dateRange: "this-week",
+    sortBy: "newest"
+  });
   
   useEffect(() => {
     if (topic && topic in topicMap) {
@@ -59,7 +62,7 @@ const TopicPage = () => {
       </div>
       
       {/* Improved tab navigation */}
-      <div className="pb-6 overflow-x-auto whitespace-nowrap md:flex md:justify-center">
+      <div className="pb-4 md:pb-6 overflow-x-auto whitespace-nowrap md:flex md:justify-center">
         <div className="inline-flex rounded-lg neumorph p-1">
           {topics.map((t) => (
             <Link
@@ -77,13 +80,27 @@ const TopicPage = () => {
         </div>
       </div>
       
+      {/* Mobile-only filter panel */}
+      <FilterPanel 
+        className="lg:hidden mb-6" 
+        onFilterChange={(newFilters) => setFilters(newFilters)}
+      />
+      
+      {/* Main content with improved responsive layout */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         <div className="lg:col-span-3">
-          <NewsFeed category={topic.toUpperCase()} />
+          <NewsFeed 
+            category={topic.toUpperCase()} 
+            dateRange={filters.dateRange}
+            sortBy={filters.sortBy}
+          />
         </div>
         
         <div className="lg:col-span-1">
-          <TrendingTags />
+          <FilterPanel 
+            className="hidden lg:block" 
+            onFilterChange={(newFilters) => setFilters(newFilters)}
+          />
         </div>
       </div>
     </div>
