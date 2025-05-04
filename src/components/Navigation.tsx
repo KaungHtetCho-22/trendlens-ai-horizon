@@ -33,7 +33,7 @@ export default function Navigation() {
   };
   
   return (
-    <nav className="sticky top-0 z-50 glass px-4 py-3">
+    <nav className="sticky top-0 z-50 glass px-4 py-3 backdrop-blur-md bg-white/70 dark:bg-zinc-800/60 border border-white/20 dark:border-white/10 shadow-sm">
       <div className="container mx-auto">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
@@ -87,7 +87,7 @@ export default function Navigation() {
         
         {/* Mobile Navigation */}
         {isOpen && (
-          <div className="md:hidden glass absolute left-0 right-0 top-full p-4 animate-fade-in">
+          <div className="md:hidden glass absolute left-0 right-0 top-full p-4 animate-fade-in backdrop-blur-md bg-white/70 dark:bg-zinc-800/60 border-t border-white/20 dark:border-white/10 shadow-sm">
             <div className="flex flex-col space-y-4">
               {categories.map(category => (
                 <NavLink

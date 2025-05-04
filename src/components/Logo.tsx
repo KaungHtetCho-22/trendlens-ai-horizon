@@ -10,7 +10,7 @@ export default function Logo() {
         </div>
       </div>
       <span className="text-xl font-display font-bold tracking-tighter">
-        Trend<span className="text-primary">Lens</span>
+        AI-<span className="text-primary">Lens</span>
       </span>
     </Link>
   );
