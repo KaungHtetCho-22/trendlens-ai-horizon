@@ -7,6 +7,7 @@ import PodcastCard, { Podcast } from "../components/PodcastCard";
 import PodcastPlayer from "../components/PodcastPlayer";
 import { LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
 
 // Mock saved data
 const savedArticles: Article[] = [
@@ -45,15 +46,15 @@ const savedPodcasts: Podcast[] = [
 
 const SavedPage = () => {
   const [currentPodcast, setCurrentPodcast] = useState<Podcast | null>(null);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const navigate = useNavigate();
+  const { user, isLoading } = useAuth();
   
-  // Mock authentication check (in a real app, this would use a proper auth hook)
   useEffect(() => {
-    // For demo purposes, we'll simulate a user not being logged in
-    // In a real app, this would check the auth state from context or a hook
-    setIsLoggedIn(false);
-  }, []);
+    // If authentication check is completed and user is not logged in, redirect to auth section
+    if (!isLoading && !user) {
+      navigate('/#auth-section');
+    }
+  }, [user, isLoading, navigate]);
   
   const handlePlayPodcast = (podcast: Podcast) => {
     setCurrentPodcast(podcast);
@@ -64,16 +65,22 @@ const SavedPage = () => {
   };
   
   const scrollToAuth = () => {
-    const authSection = document.getElementById("auth-section");
-    if (authSection) {
-      authSection.scrollIntoView({ behavior: "smooth" });
-    } else {
-      // If we're not on the home page, navigate to it first
-      navigate('/#auth-section');
-    }
+    navigate('/#auth-section');
   };
   
-  if (!isLoggedIn) {
+  // Show loading state while checking authentication
+  if (isLoading) {
+    return (
+      <div className="container mx-auto px-4 py-12">
+        <div className="neumorph p-12 text-center max-w-2xl mx-auto">
+          <p className="text-lg animate-pulse">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+  
+  // If not logged in after loading is complete
+  if (!user) {
     return (
       <div className="container mx-auto px-4 py-12">
         <div className="neumorph p-12 text-center max-w-2xl mx-auto">

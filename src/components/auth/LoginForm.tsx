@@ -8,6 +8,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 
 const loginSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email" }),
@@ -18,7 +19,9 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { signIn } = useAuth();
   
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -28,12 +31,27 @@ export default function LoginForm() {
     },
   });
   
-  const onSubmit = (data: LoginFormValues) => {
-    console.log("Login attempt:", data);
-    toast({
-      title: "Demo Mode",
-      description: "This is a demo. Login functionality requires Supabase integration.",
-    });
+  const onSubmit = async (data: LoginFormValues) => {
+    setIsLoading(true);
+    try {
+      const { error } = await signIn(data.email, data.password);
+      
+      if (error) {
+        toast({
+          title: "Login failed",
+          description: error.message || "Please check your credentials and try again.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Login failed",
+        description: "An unexpected error occurred. Please try again later.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
   
   const togglePasswordVisibility = () => {
@@ -103,8 +121,19 @@ export default function LoginForm() {
             </a>
           </div>
           
-          <Button type="submit" className="w-full btn-neumorph" size="lg">
-            <LogIn className="mr-2 h-4 w-4" /> Sign In
+          <Button 
+            type="submit" 
+            className="w-full btn-neumorph" 
+            size="lg"
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <span className="animate-pulse">Signing In...</span>
+            ) : (
+              <>
+                <LogIn className="mr-2 h-4 w-4" /> Sign In
+              </>
+            )}
           </Button>
         </form>
       </Form>

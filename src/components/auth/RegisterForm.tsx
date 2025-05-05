@@ -8,6 +8,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 
 const registerSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email" }),
@@ -23,7 +24,9 @@ type RegisterFormValues = z.infer<typeof registerSchema>;
 export default function RegisterForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { signUp } = useAuth();
   
   const form = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
@@ -34,12 +37,33 @@ export default function RegisterForm() {
     },
   });
   
-  const onSubmit = (data: RegisterFormValues) => {
-    console.log("Registration attempt:", data);
-    toast({
-      title: "Demo Mode",
-      description: "This is a demo. Registration functionality requires Supabase integration.",
-    });
+  const onSubmit = async (data: RegisterFormValues) => {
+    setIsLoading(true);
+    try {
+      const { error } = await signUp(data.email, data.password);
+      
+      if (error) {
+        toast({
+          title: "Registration failed",
+          description: error.message || "Please try again with a different email.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Registration successful",
+          description: "Please check your email for a confirmation link to complete your registration.",
+        });
+        form.reset();
+      }
+    } catch (error) {
+      toast({
+        title: "Registration failed",
+        description: "An unexpected error occurred. Please try again later.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
   
   return (
@@ -130,8 +154,19 @@ export default function RegisterForm() {
             )}
           />
           
-          <Button type="submit" className="w-full btn-neumorph" size="lg">
-            <UserPlus className="mr-2 h-4 w-4" /> Create Account
+          <Button 
+            type="submit" 
+            className="w-full btn-neumorph" 
+            size="lg"
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <span className="animate-pulse">Creating Account...</span>
+            ) : (
+              <>
+                <UserPlus className="mr-2 h-4 w-4" /> Create Account
+              </>
+            )}
           </Button>
         </form>
       </Form>
