@@ -61,8 +61,8 @@ const TopicPage = () => {
         <p className="text-muted-foreground">{topicInfo.description}</p>
       </div>
       
-      {/* Improved tab navigation */}
-      <div className="pb-4 md:pb-6 overflow-x-auto whitespace-nowrap md:flex md:justify-center">
+      {/* Tab navigation - visible only on mobile */}
+      <div className="pb-4 md:pb-6 overflow-x-auto whitespace-nowrap md:hidden">
         <div className="inline-flex rounded-lg neumorph p-1">
           {topics.map((t) => (
             <Link
