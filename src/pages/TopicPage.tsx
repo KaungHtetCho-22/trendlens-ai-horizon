@@ -4,22 +4,26 @@ import { useParams, Link } from "react-router-dom";
 import NewsFeed from "../components/NewsFeed";
 import FilterPanel from "../components/FilterPanel";
 
-const topicMap: Record<string, { title: string, description: string }> = {
+const topicMap: Record<string, { title: string, description: string, category: string }> = {
   ml: {
     title: "Machine Learning",
-    description: "Latest news and breakthroughs in machine learning algorithms, techniques, and applications."
+    description: "Latest news and breakthroughs in machine learning algorithms, techniques, and applications.",
+    category: "ML"
   },
   cv: {
     title: "Computer Vision",
-    description: "Updates on computer vision research, image recognition, object detection, and visual AI systems."
+    description: "Updates on computer vision research, image recognition, object detection, and visual AI systems.",
+    category: "CV"
   },
   nlp: {
     title: "Natural Language Processing",
-    description: "Developments in NLP, language models, sentiment analysis, and text processing technologies."
+    description: "Developments in NLP, language models, sentiment analysis, and text processing technologies.",
+    category: "NLP"
   },
   rl: {
     title: "Reinforcement Learning",
-    description: "Advances in reinforcement learning, robotics, game AI, and autonomous systems."
+    description: "Advances in reinforcement learning, robotics, game AI, and autonomous systems.",
+    category: "RL"
   }
 };
 
@@ -31,7 +35,7 @@ const topics = Object.entries(topicMap).map(([key, value]) => ({
 
 const TopicPage = () => {
   const { topic } = useParams<{ topic: string }>();
-  const [topicInfo, setTopicInfo] = useState<{ title: string, description: string } | null>(null);
+  const [topicInfo, setTopicInfo] = useState<{ title: string, description: string, category: string } | null>(null);
   const [filters, setFilters] = useState({
     dateRange: "this-week",
     sortBy: "newest"
@@ -40,6 +44,7 @@ const TopicPage = () => {
   useEffect(() => {
     if (topic && topic in topicMap) {
       setTopicInfo(topicMap[topic]);
+      console.log(`Set topic: ${topic}, category: ${topicMap[topic].category}`);
     } else {
       setTopicInfo(null);
     }
@@ -90,7 +95,7 @@ const TopicPage = () => {
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         <div className="lg:col-span-3">
           <NewsFeed 
-            category={topic.toUpperCase()} 
+            category={topicInfo.category} 
             dateRange={filters.dateRange}
             sortBy={filters.sortBy}
           />
@@ -105,6 +110,6 @@ const TopicPage = () => {
       </div>
     </div>
   );
-};
+}
 
 export default TopicPage;

@@ -18,6 +18,9 @@ export default function NewsFeed({
   dateRange = "this-week",
   sortBy = "newest"
 }: NewsFeedProps) {
+  // Add some console logging to debug the category prop
+  console.log(`NewsFeed received category: ${category}`);
+  
   const { displayedArticles, isLoading, error, loadMoreArticles } = useArticles({
     category,
     dateRange,

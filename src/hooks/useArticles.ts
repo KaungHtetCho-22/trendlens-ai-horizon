@@ -60,14 +60,24 @@ export function useArticles({ category, dateRange = "this-week", sortBy = "newes
   useEffect(() => {
     setError(null);
     setDisplayedArticles([]);
+    setIsLoading(true);
     
     try {
       let filtered = [...allArticles];
       
+      // Fix for category filtering - make case-insensitive comparison and log for debugging
       if (category) {
-        filtered = filtered.filter(article => 
-          article.category.toLowerCase() === category.toLowerCase()
-        );
+        console.log(`Filtering for category: ${category}`);
+        console.log(`Before filtering: ${filtered.length} articles`);
+        console.log(`Categories available: ${[...new Set(filtered.map(a => a.category))].join(', ')}`);
+        
+        filtered = filtered.filter(article => {
+          const articleCategory = article.category.toLowerCase();
+          const targetCategory = category.toLowerCase();
+          return articleCategory === targetCategory;
+        });
+        
+        console.log(`After filtering: ${filtered.length} articles`);
       }
       
       // Apply sorting based on sortBy parameter
@@ -107,7 +117,10 @@ export function useArticles({ category, dateRange = "this-week", sortBy = "newes
       setDisplayedArticles(filtered.slice(0, articlesPerPage));
       setPage(1);
     } catch (err) {
+      console.error("Error filtering articles:", err);
       setError("Error filtering articles. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   }, [category, dateRange, sortBy, allArticles]);
 
@@ -119,8 +132,8 @@ export function useArticles({ category, dateRange = "this-week", sortBy = "newes
         let filtered = [...allArticles];
         
         if (category) {
-          filtered = filtered.filter(
-            article => article.category.toLowerCase() === category.toLowerCase()
+          filtered = filtered.filter(article => 
+            article.category.toLowerCase() === category.toLowerCase()
           );
         }
         
