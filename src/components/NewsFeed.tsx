@@ -48,12 +48,14 @@ export default function NewsFeed({
   
   return (
     <div className="mb-12">
-      <h2 className="text-2xl font-display font-bold mb-6">Latest Articles</h2>
+      <h2 className="text-2xl font-display font-bold mb-6">
+        {category ? `${category} Articles` : 'Latest Articles'}
+      </h2>
       
       {isLoading && displayedArticles.length === 0 ? (
         <ArticleLoader />
       ) : (
-        <ArticlesGrid articles={displayedArticles} />
+        <ArticlesGrid articles={displayedArticles} category={category} />
       )}
       
       <InfiniteScrollLoader 

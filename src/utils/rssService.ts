@@ -1,4 +1,3 @@
-
 import { Article } from "@/components/ArticleCard";
 
 interface RssSource {
@@ -7,7 +6,7 @@ interface RssSource {
   name: string;
 }
 
-// RSS feed sources
+// RSS feed sources - updated with more specific categories
 const RSS_SOURCES: RssSource[] = [
   {
     name: "OpenAI",
@@ -38,6 +37,16 @@ const RSS_SOURCES: RssSource[] = [
     name: "ArXiv CS.CL",
     url: "https://export.arxiv.org/rss/cs.CL",
     category: "NLP"
+  },
+  {
+    name: "ArXiv CS.CV",
+    url: "https://export.arxiv.org/rss/cs.CV",
+    category: "CV"
+  },
+  {
+    name: "RL Blog",
+    url: "https://medium.com/feed/reinforcement-learning-blog",
+    category: "RL"
   },
   {
     name: "TWIML",
@@ -156,15 +165,18 @@ async function parseRssFeed(source: RssSource): Promise<Article[]> {
       // Extract image or fall back to default
       const imageUrl = extractImageFromHtml(content) || DEFAULT_IMAGES[source.category] || DEFAULT_IMAGES.ML;
       
-      return {
+      const article = {
         id: `${source.name}-${index}-${Date.now()}`,
         title,
         excerpt: extractExcerpt(content),
         image: imageUrl,
-        category: source.category,
+        category: source.category, // Use the source's category directly
         date: formatDateString(pubDate),
         url: link
       };
+
+      // Apply additional categorization if needed
+      return categorizeArticle(article);
     });
   } catch (error) {
     console.error(`Error parsing ${source.name} feed:`, error);
@@ -194,11 +206,16 @@ export async function fetchAllArticles(): Promise<Article[]> {
 }
 
 /**
- * Categorize an article based on its content
+ * Categorize an article based on its content if it doesn't already have a specific category
  */
 export function categorizeArticle(article: Article): Article {
-  // If article already has a category, return it
-  if (article.category && article.category !== "") {
+  // If article already has a valid topic category, return it unchanged
+  if (article.category && ["ML", "NLP", "CV", "RL"].includes(article.category)) {
+    return article;
+  }
+  
+  // If it's explicitly a podcast, keep it as is
+  if (article.category === "Podcast") {
     return article;
   }
   
@@ -206,13 +223,20 @@ export function categorizeArticle(article: Article): Article {
   const title = article.title.toLowerCase();
   const excerpt = article.excerpt.toLowerCase();
   
-  if (title.includes('vision') || title.includes('image') || title.includes('camera') || excerpt.includes('computer vision')) {
+  if (title.includes('vision') || title.includes('image') || title.includes('camera') || 
+      excerpt.includes('computer vision') || excerpt.includes('image recognition') || 
+      title.includes('cv') || excerpt.includes('visual')) {
     return { ...article, category: 'CV' };
-  } else if (title.includes('language') || title.includes('nlp') || title.includes('text') || excerpt.includes('natural language')) {
+  } else if (title.includes('language') || title.includes('nlp') || title.includes('text') || 
+             excerpt.includes('natural language') || excerpt.includes('sentiment') || 
+             title.includes('translation') || excerpt.includes('language model')) {
     return { ...article, category: 'NLP' };
-  } else if (title.includes('reinforcement') || title.includes('agent') || title.includes('rl') || excerpt.includes('reinforcement learning')) {
+  } else if (title.includes('reinforcement') || title.includes('agent') || title.includes('rl') || 
+             excerpt.includes('reinforcement learning') || excerpt.includes('robotics') || 
+             title.includes('reward') || excerpt.includes('policy gradient')) {
     return { ...article, category: 'RL' };
   } else {
+    // Default to ML for general AI topics
     return { ...article, category: 'ML' };
   }
 }

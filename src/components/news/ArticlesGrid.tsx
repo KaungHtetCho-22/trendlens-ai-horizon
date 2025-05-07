@@ -3,13 +3,18 @@ import ArticleCard, { Article } from "../ArticleCard";
 
 interface ArticlesGridProps {
   articles: Article[];
+  category?: string;
 }
 
-export default function ArticlesGrid({ articles }: ArticlesGridProps) {
+export default function ArticlesGrid({ articles, category }: ArticlesGridProps) {
   if (articles.length === 0) {
     return (
       <div className="neumorph p-8 text-center">
-        <p className="text-lg text-muted-foreground">No articles found for this category.</p>
+        <p className="text-lg text-muted-foreground">
+          {category 
+            ? `No articles found for ${category} category. We're working on adding more content!`
+            : "No articles found. Please try different filters."}
+        </p>
       </div>
     );
   }
